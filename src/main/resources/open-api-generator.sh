@@ -1,0 +1,2 @@
+#!/bin/bash
+openapi-generator-cli generate -i ../../../openapi.yaml -g java --additional-properties=enumPropertyNaming=UPPERCASE,withSeparateModelsAndApi=true,modelPackage=models,authMethods=false,library=resttemplate,dateLibrary=java8,modelPackage=ru.strelchm.enrollment.api.dto,invokerPackage=com.lora.controller.v1.map.utils,apiPackage=ru.strelchm.enrollment.api,useAbstractionForFiles=true -o ../../../ --skip-validate-spec
