@@ -10,7 +10,6 @@ import java.util.UUID;
 @Entity
 @Getter
 @Setter
-@ToString
 @NoArgsConstructor
 @AllArgsConstructor
 //@Table(indexes = {
@@ -22,7 +21,7 @@ public class ShopUnit extends BaseEntity<UUID> {
 
   private String name;
 
-  @ManyToOne(cascade = {CascadeType.MERGE, CascadeType.PERSIST})
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "parent_id")
   private ShopUnit parent;
 
@@ -34,5 +33,14 @@ public class ShopUnit extends BaseEntity<UUID> {
   @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
   private List<ShopUnit> children;
 
-//  private Long averagePrice;
+  @Override
+  public String toString() {
+    return "ShopUnit{" +
+        "id=" + id +
+        ", name='" + name + '\'' +
+        ", parent=" + parent +
+        ", type=" + type +
+        ", price=" + price +
+        '}';
+  }
 }

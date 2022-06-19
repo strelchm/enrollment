@@ -43,15 +43,15 @@ public abstract class ImportsMapper {
     }
     return list.stream()
         .map(this::toShopUnitDto)
-        .sorted((v1, v2) -> {
-          if (v1.getPrice() != null && v2.getPrice() != null) {
-          return v1.getPrice().compareTo(v2.getPrice());
-          }
-          if (v1.getPrice() != null) {
-            return -1;
-          }
-          return 1;
-        })
+//        .sorted((v1, v2) -> {
+//          if (v1.getPrice() != null && v2.getPrice() != null) {
+//          return v1.getPrice().compareTo(v2.getPrice());
+//          }
+//          if (v1.getPrice() != null) {
+//            return -1;
+//          }
+//          return 1;
+//        })
         .collect(Collectors.toList());
   }
 

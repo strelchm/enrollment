@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 @RestController("/node")
 @RequestMapping("/node")
 @Tag(name = "node", description = "the node API")
-public class NodeController implements NodeApi {
+public class NodeController {
   private final ShopUnitService importsService;
   private final ImportsMapper importsMapper;
 
@@ -35,7 +35,6 @@ public class NodeController implements NodeApi {
     this.importsMapper = importsMapper;
   }
 
-  @Override
   @Operation(
       operationId = "nodeIdStatisticGet",
       tags = {"Дополнительные задачи"},

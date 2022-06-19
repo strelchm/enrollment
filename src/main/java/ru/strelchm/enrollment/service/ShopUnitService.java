@@ -37,7 +37,7 @@ public class ShopUnitService {
   public void importItems(List<ShopUnit> shopUnits, OffsetDateTime updateDate) {
     Set<UUID> existedUnitIds = new HashSet<>();
     List<UUID> parentUnitIds = new ArrayList<>();
-    Set<UUID> categoryForRecalculation = new HashSet<>();
+    Set<UUID> recalculationCategories = new HashSet<>();
 
     shopUnits.forEach(v -> {
       if (v.getId() != null) {
@@ -80,11 +80,54 @@ public class ShopUnitService {
               .orElseThrow(BadRequestException::new);
         }
         unit.setParent(parent);
+        if (parent.getChildren() == null) {
+          parent.setChildren(new ArrayList<>());
+        }
+        parent.getChildren().add(unit);
+        shopUnitRepository.save(parent);
       }
 
       unit.setUpdated(updateDate);
+
+      shopUnitRepository.save(unit);
+
+      if (unit.getType() == ShopUnitType.OFFER) {
+        fillRecalculationCategories(unit.getParent(), recalculationCategories);
+      }
     }
-    shopUnitRepository.saveAll(shopUnits);
+
+    for (ShopUnit unit : shopUnitRepository.findAllByIdIn(recalculationCategories)) {
+      List<ShopUnit> offers = new ArrayList<>();
+      fillOffers(unit, offers);
+      if (!offers.isEmpty()) {
+        unit.setPrice((long) offers.stream().mapToLong(ShopUnit::getPrice).average().orElseThrow(RuntimeException::new));
+        unit.setUpdated(updateDate);
+      }
+      shopUnitRepository.save(unit);
+    }
+  }
+
+  public void fillOffers(ShopUnit root, List<ShopUnit> offers) {
+    List<ShopUnit> children = root.getChildren();
+    if (children == null) {
+      return;
+    }
+    for (ShopUnit child : children) {
+      if (child.getType() == ShopUnitType.OFFER) {
+        offers.add(child);
+      } else {
+        fillOffers(child, offers);
+      }
+    }
+  }
+
+  public void fillRecalculationCategories(ShopUnit parent, Collection<UUID> recalculationCategories) {
+    while (parent != null) {
+      if (parent.getType() == ShopUnitType.CATEGORY) {
+        recalculationCategories.add(parent.getId());
+      }
+      parent = parent.getParent();
+    }
   }
 
   @Transactional

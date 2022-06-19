@@ -16,6 +16,6 @@ import java.util.UUID;
 public interface ShopUnitRepository extends JpaRepository<ShopUnit, UUID>, JpaSpecificationExecutor<ShopUnit> {
   Set<ShopUnit> findAllByIdIn(Collection<UUID> ids);
 
-  @EntityGraph(attributePaths = {"children","children.children"})
+  @EntityGraph(attributePaths = {"children"})
   Optional<ShopUnit> findById(UUID id);
 }
