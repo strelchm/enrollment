@@ -2,6 +2,8 @@ package ru.strelchm.enrollment.api.dto;
 
 import java.net.URI;
 import java.util.Objects;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import java.time.OffsetDateTime;
@@ -40,7 +42,7 @@ public class ShopUnitStatisticUnit {
   private Long price = null;
 
   @JsonProperty("date")
-  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+  @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", timezone = "UTC")
   private OffsetDateTime date;
 
   public ShopUnitStatisticUnit id(UUID id) {

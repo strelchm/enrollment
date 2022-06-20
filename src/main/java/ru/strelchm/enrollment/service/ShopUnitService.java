@@ -3,6 +3,7 @@ package ru.strelchm.enrollment.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.strelchm.enrollment.api.dto.ShopUnitStatisticUnit;
 import ru.strelchm.enrollment.api.dto.ShopUnitType;
 import ru.strelchm.enrollment.dao.ShopUnitRepository;
 import ru.strelchm.enrollment.dao.ShopUnitStatisticsRepository;
@@ -10,7 +11,10 @@ import ru.strelchm.enrollment.domain.ShopUnit;
 import ru.strelchm.enrollment.domain.ShopUnitStatistics;
 import ru.strelchm.enrollment.exception.BadRequestException;
 import ru.strelchm.enrollment.exception.NotFoundException;
+import ru.strelchm.enrollment.mapper.ImportsMapper;
 
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Predicate;
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -21,9 +25,12 @@ import java.util.stream.Stream;
 public class ShopUnitService {
   private final ShopUnitRepository shopUnitRepository;
   private final ShopUnitStatisticsRepository shopUnitStatisticsRepository;
+  private final ImportsMapper importsMapper;
 
   @Autowired
-  public ShopUnitService(ShopUnitRepository shopUnitRepository, ShopUnitStatisticsRepository shopUnitStatisticsRepository) {
+  public ShopUnitService(ImportsMapper importsMapper, ShopUnitRepository shopUnitRepository,
+                         ShopUnitStatisticsRepository shopUnitStatisticsRepository) {
+    this.importsMapper = importsMapper;
     this.shopUnitRepository = shopUnitRepository;
     this.shopUnitStatisticsRepository = shopUnitStatisticsRepository;
   }
@@ -38,6 +45,7 @@ public class ShopUnitService {
     Set<UUID> existedUnitIds = new HashSet<>();
     List<UUID> parentUnitIds = new ArrayList<>();
     Set<ShopUnit> recalculationCategories = new HashSet<>();
+    Set<ShopUnitStatistics> shopUnitStatistics = new HashSet<>();
 
     shopUnits.forEach(v -> {
       if (v.getId() != null) {
@@ -59,13 +67,21 @@ public class ShopUnitService {
 
     for (ShopUnit unit : shopUnits) {
       ShopUnit current = existedUnits.get(unit.getId());
-      if (current != null && current.getType() != unit.getType()) {
-        throw new BadRequestException();
-      }
 
       if (unit.getType() == ShopUnitType.CATEGORY && unit.getPrice() != null) {
         throw new BadRequestException();
       }
+
+      if (current != null) {
+        if (current.getType() != unit.getType()) {
+          throw new BadRequestException();
+        }
+        if (current.getType() == ShopUnitType.CATEGORY) {
+          unit.setPrice(current.getPrice());
+        }
+        shopUnitStatistics.add(importsMapper.toShopUnitStatistics(current));
+      }
+
 
       if (unit.getType() == ShopUnitType.OFFER && (unit.getPrice() == null || unit.getPrice() <= 0)) {
         throw new BadRequestException();
@@ -96,6 +112,7 @@ public class ShopUnitService {
       }
     }
 
+    shopUnitStatisticsRepository.saveAll(shopUnitStatistics);
     recalculationCategories.forEach(unit -> recalculateParent(updateDate, unit));
   }
 
@@ -171,7 +188,31 @@ public class ShopUnitService {
   }
 
   @Transactional(readOnly = true)
-  public List<ShopUnitStatistics> nodeIdStatisticGet(UUID id) {
-    return shopUnitStatisticsRepository.findAllByUnit(getById(id));
+  public List<ShopUnitStatistics> nodeIdStatisticGet(UUID id, OffsetDateTime from, OffsetDateTime to) {
+    ShopUnit unit = getById(id);
+
+    List<ShopUnitStatistics> stat = shopUnitStatisticsRepository.findAll((root, query, cb) -> {
+      List<Predicate> predicates = new ArrayList<>();
+      if (from != null) {
+        predicates.add(cb.greaterThanOrEqualTo(root.get("updated"), from));
+      }
+      if (to != null) {
+        predicates.add(cb.lessThan(root.get("updated"), to));
+      }
+      Join<ShopUnitStatistics, ShopUnit> user = root.join("unit");
+      predicates.add(cb.equal(user.get("id"), id));
+
+      query.orderBy(cb.desc(root.get("updated")), (cb.desc(root.get("created"))));
+
+      return cb.and(predicates.toArray(new Predicate[0]));
+    });
+
+    if (((from == null || unit.getUpdated().isAfter(from) || unit.getUpdated().isEqual(from)) && (to == null || unit.getUpdated().isBefore(to)))) {
+      ShopUnitStatistics currentStatItem = importsMapper.toShopUnitStatistics(unit);
+      currentStatItem.setId(unit.getId());
+      stat.add(0, currentStatItem);
+    }
+
+    return stat;
   }
 }

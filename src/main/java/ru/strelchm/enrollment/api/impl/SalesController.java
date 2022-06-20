@@ -1,5 +1,6 @@
 package ru.strelchm.enrollment.api.impl;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -56,7 +57,8 @@ public class SalesController {
       @NotNull @Parameter(name = "date", description = "Дата и время запроса. " +
           "Дата должна обрабатываться согласно ISO 8601 (такой придерживается OpenAPI). " +
           "Если дата не удовлетворяет данному формату, необходимо отвечать 400", required = true) @Valid
-      @RequestParam(value = "date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime date
+      @RequestParam(value = "date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+      @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", timezone = "UTC") OffsetDateTime date
   ) {
     return new ShopUnitStatisticResponse().items(
         importsService.salesGet(date.minus(24, ChronoUnit.HOURS), date).stream()

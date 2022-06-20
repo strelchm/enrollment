@@ -25,6 +25,7 @@ public abstract class ImportsMapper {
     return shopUnit;
   }
 
+  @Mapping(target = "date", expression = "java(dbo.getUpdated())")
   public abstract ShopUnitStatisticUnit toShopUnitStatisticUnitDto(ShopUnitStatistics dbo);
 
   @Mapping(target = "date", expression = "java(dbo.getUpdated())")
@@ -36,6 +37,12 @@ public abstract class ImportsMapper {
   @Mapping(target = "parentId", expression = "java(dbo.getParent() == null ? null : dbo.getParent().getId())")
   @Mapping(target = "children", expression = "java(shopUnitListToShopUnitList(dbo.getChildren()))")
   public abstract ru.strelchm.enrollment.api.dto.ShopUnit toShopUnitDto(ShopUnit dbo);
+
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "created", ignore = true)
+  @Mapping(target = "parentId", expression = "java(dbo.getParent() == null ? null : dbo.getParent().getId())")
+  @Mapping(target = "unit", expression = "java(dbo)")
+  public abstract ShopUnitStatistics toShopUnitStatistics(ShopUnit dbo);
 
   protected List<ru.strelchm.enrollment.api.dto.ShopUnit> shopUnitListToShopUnitList(List<ShopUnit> list) {
     if ( list == null || list.isEmpty()) {

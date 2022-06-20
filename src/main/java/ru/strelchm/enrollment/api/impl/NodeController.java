@@ -66,7 +66,7 @@ public class NodeController {
       @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime dateEnd
   ) {
     return new ShopUnitStatisticResponse().items(
-        importsService.nodeIdStatisticGet(id).stream()
+        importsService.nodeIdStatisticGet(id, dateStart, dateEnd).stream()
             .map(importsMapper::toShopUnitStatisticUnitDto)
             .collect(Collectors.toList())
     );

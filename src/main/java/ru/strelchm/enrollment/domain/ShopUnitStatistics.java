@@ -22,9 +22,7 @@ public class ShopUnitStatistics extends BaseEntity<UUID> {
 
   private String name;
 
-  @ManyToOne
-  @JoinColumn(name = "parent_id")
-  private ShopUnitStatistics parent;
+  private UUID parentId;
 
   @Enumerated(EnumType.STRING)
   private ShopUnitType type;
