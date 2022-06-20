@@ -37,7 +37,7 @@ public class ShopUnitService {
   public void importItems(List<ShopUnit> shopUnits, OffsetDateTime updateDate) {
     Set<UUID> existedUnitIds = new HashSet<>();
     List<UUID> parentUnitIds = new ArrayList<>();
-    Set<UUID> recalculationCategories = new HashSet<>();
+    Set<ShopUnit> recalculationCategories = new HashSet<>();
 
     shopUnits.forEach(v -> {
       if (v.getId() != null) {
@@ -96,15 +96,19 @@ public class ShopUnitService {
       }
     }
 
-    for (ShopUnit unit : shopUnitRepository.findAllByIdIn(recalculationCategories)) {
-      List<ShopUnit> offers = new ArrayList<>();
-      fillOffers(unit, offers);
-      if (!offers.isEmpty()) {
-        unit.setPrice((long) offers.stream().mapToLong(ShopUnit::getPrice).average().orElseThrow(RuntimeException::new));
+    recalculationCategories.forEach(unit -> recalculateParent(updateDate, unit));
+  }
+
+  private void recalculateParent(OffsetDateTime updateDate, ShopUnit unit) {
+    List<ShopUnit> offers = new ArrayList<>();
+    fillOffers(unit, offers);
+    if (!offers.isEmpty()) {
+      unit.setPrice((long) offers.stream().mapToLong(ShopUnit::getPrice).average().orElseThrow(RuntimeException::new));
+      if (updateDate != null) {
         unit.setUpdated(updateDate);
       }
-      shopUnitRepository.save(unit);
     }
+    shopUnitRepository.save(unit);
   }
 
   public void fillOffers(ShopUnit root, List<ShopUnit> offers) {
@@ -121,10 +125,10 @@ public class ShopUnitService {
     }
   }
 
-  public void fillRecalculationCategories(ShopUnit parent, Collection<UUID> recalculationCategories) {
+  public void fillRecalculationCategories(ShopUnit parent, Collection<ShopUnit> recalculationCategories) {
     while (parent != null) {
       if (parent.getType() == ShopUnitType.CATEGORY) {
-        recalculationCategories.add(parent.getId());
+        recalculationCategories.add(parent);
       }
       parent = parent.getParent();
     }
@@ -132,7 +136,17 @@ public class ShopUnitService {
 
   @Transactional
   public void deleteById(UUID id) {
-    shopUnitRepository.delete(getById(id));
+    ShopUnit unit = getById(id);
+    ShopUnit parent = unit.getParent();
+
+    shopUnitRepository.delete(unit);
+
+    while (parent != null) {
+      if (parent.getType() == ShopUnitType.CATEGORY) {
+        recalculateParent(null, parent);
+      }
+      parent = parent.getParent();
+    }
   }
 
   @Transactional(readOnly = true)
