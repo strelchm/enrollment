@@ -103,10 +103,15 @@ public class ShopUnitService {
     List<ShopUnit> offers = new ArrayList<>();
     fillOffers(unit, offers);
     if (!offers.isEmpty()) {
-      unit.setPrice((long) offers.stream().mapToLong(ShopUnit::getPrice).average().orElseThrow(RuntimeException::new));
+      OptionalDouble avg = offers.stream().mapToLong(ShopUnit::getPrice).average();
+      if (avg.isPresent()) {
+        unit.setPrice((long) avg.getAsDouble());
+      }
       if (updateDate != null) {
         unit.setUpdated(updateDate);
       }
+    } else {
+      unit.setPrice(null);
     }
     shopUnitRepository.save(unit);
   }
@@ -140,6 +145,7 @@ public class ShopUnitService {
     ShopUnit parent = unit.getParent();
 
     shopUnitRepository.delete(unit);
+    Optional.ofNullable(parent).ifPresent(p -> p.getChildren().removeIf(v -> v.getId().equals(id)));
 
     while (parent != null) {
       if (parent.getType() == ShopUnitType.CATEGORY) {
