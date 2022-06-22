@@ -3,7 +3,6 @@ package ru.strelchm.enrollment.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.strelchm.enrollment.api.dto.ShopUnitStatisticUnit;
 import ru.strelchm.enrollment.api.dto.ShopUnitType;
 import ru.strelchm.enrollment.dao.ShopUnitRepository;
 import ru.strelchm.enrollment.dao.ShopUnitStatisticsRepository;
@@ -11,10 +10,9 @@ import ru.strelchm.enrollment.domain.ShopUnit;
 import ru.strelchm.enrollment.domain.ShopUnitStatistics;
 import ru.strelchm.enrollment.exception.BadRequestException;
 import ru.strelchm.enrollment.exception.NotFoundException;
-import ru.strelchm.enrollment.mapper.ImportsMapper;
+import ru.strelchm.enrollment.mapper.ShopUnitMapper;
 
 import javax.persistence.criteria.Join;
-import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Predicate;
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -25,12 +23,12 @@ import java.util.stream.Stream;
 public class ShopUnitService {
   private final ShopUnitRepository shopUnitRepository;
   private final ShopUnitStatisticsRepository shopUnitStatisticsRepository;
-  private final ImportsMapper importsMapper;
+  private final ShopUnitMapper shopUnitMapper;
 
   @Autowired
-  public ShopUnitService(ImportsMapper importsMapper, ShopUnitRepository shopUnitRepository,
+  public ShopUnitService(ShopUnitMapper shopUnitMapper, ShopUnitRepository shopUnitRepository,
                          ShopUnitStatisticsRepository shopUnitStatisticsRepository) {
-    this.importsMapper = importsMapper;
+    this.shopUnitMapper = shopUnitMapper;
     this.shopUnitRepository = shopUnitRepository;
     this.shopUnitStatisticsRepository = shopUnitStatisticsRepository;
   }
@@ -79,7 +77,7 @@ public class ShopUnitService {
         if (current.getType() == ShopUnitType.CATEGORY) {
           unit.setPrice(current.getPrice());
         }
-        shopUnitStatistics.add(importsMapper.toShopUnitStatistics(current));
+        shopUnitStatistics.add(shopUnitMapper.toShopUnitStatistics(current));
       }
 
 
@@ -208,7 +206,7 @@ public class ShopUnitService {
     });
 
     if (((from == null || unit.getUpdated().isAfter(from) || unit.getUpdated().isEqual(from)) && (to == null || unit.getUpdated().isBefore(to)))) {
-      ShopUnitStatistics currentStatItem = importsMapper.toShopUnitStatistics(unit);
+      ShopUnitStatistics currentStatItem = shopUnitMapper.toShopUnitStatistics(unit);
       currentStatItem.setId(unit.getId());
       stat.add(0, currentStatItem);
     }
