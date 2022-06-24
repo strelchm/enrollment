@@ -38,7 +38,6 @@ public class ShopUnit extends BaseEntity<UUID> {
     return "ShopUnit{" +
         "id=" + id +
         ", name='" + name + '\'' +
-        ", parent=" + parent +
         ", type=" + type +
         ", price=" + price +
         '}';

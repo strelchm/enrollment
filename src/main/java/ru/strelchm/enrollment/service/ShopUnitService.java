@@ -97,7 +97,9 @@ public class ShopUnitService {
         if (parent.getChildren() == null) {
           parent.setChildren(new ArrayList<>());
         }
-        parent.getChildren().add(unit);
+        if (!updateExistedChild(unit, parent)) {
+          parent.getChildren().add(unit);
+        }
         shopUnitRepository.save(parent);
       }
 
@@ -112,6 +114,20 @@ public class ShopUnitService {
 
     shopUnitStatisticsRepository.saveAll(shopUnitStatistics);
     recalculationCategories.forEach(unit -> recalculateParent(updateDate, unit));
+  }
+
+  private boolean updateExistedChild(ShopUnit unit, ShopUnit parent) {
+    ListIterator<ShopUnit> iterator = parent.getChildren().listIterator();
+    boolean existed = false;
+    while (iterator.hasNext()) {
+      ShopUnit next = iterator.next();
+      if (next.getId().equals(unit.getId())) {
+        iterator.set(unit);
+        existed = true;
+        break;
+      }
+    }
+    return existed;
   }
 
   private void recalculateParent(OffsetDateTime updateDate, ShopUnit unit) {
@@ -197,8 +213,7 @@ public class ShopUnitService {
       if (to != null) {
         predicates.add(cb.lessThan(root.get("updated"), to));
       }
-      Join<ShopUnitStatistics, ShopUnit> user = root.join("unit");
-      predicates.add(cb.equal(user.get("id"), id));
+      predicates.add(cb.equal(root.join("unit").get("id"), id));
 
       query.orderBy(cb.desc(root.get("updated")), (cb.desc(root.get("created"))));
 
