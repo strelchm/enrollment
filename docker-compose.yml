@@ -1,0 +1,27 @@
+version: '3'
+services:
+  postgres-enrollment:
+    image: "postgres:14.2-alpine"
+    container_name: postgres-enrollment
+    restart: always
+    environment:
+      - POSTGRES_DB=enrollment
+      - POSTGRES_USER=enrollment
+      - POSTGRES_PASSWORD=enrollment
+    ports:
+      - "7432:5432"
+    volumes:
+      - "~/pgdata:/var/lib/postgresql/dataenrollment"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U enrollment" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  backend-enrollment:
+    build: ./
+    image: "backend-enrollment"
+    container_name: backend-enrollment
+    network_mode: "host"
+    depends_on:
+      - postgres-enrollment
+    restart: always
