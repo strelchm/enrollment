@@ -33,6 +33,9 @@ public class ShopUnit extends BaseEntity<UUID> {
   @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
   private List<ShopUnit> children;
 
+  @OneToMany(mappedBy = "unit", cascade = CascadeType.ALL)
+  private List<ShopUnitStatistics> statistics;
+
   @Override
   public String toString() {
     return "ShopUnit{" +

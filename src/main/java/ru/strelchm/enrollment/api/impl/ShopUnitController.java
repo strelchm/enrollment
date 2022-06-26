@@ -13,6 +13,7 @@ import ru.strelchm.enrollment.api.dto.Error;
 import ru.strelchm.enrollment.api.dto.ShopUnitImportRequest;
 import ru.strelchm.enrollment.api.dto.ShopUnitStatisticResponse;
 import ru.strelchm.enrollment.domain.ShopUnit;
+import ru.strelchm.enrollment.exception.BadRequestException;
 import ru.strelchm.enrollment.mapper.ShopUnitMapper;
 import ru.strelchm.enrollment.service.ShopUnitService;
 
@@ -108,6 +109,9 @@ public class ShopUnitController {
       @Valid @RequestParam(value = "dateEnd", required = false)
       @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime dateEnd
   ) {
+    if (dateEnd.isBefore(dateStart)) {
+      throw new BadRequestException();
+    }
     return new ShopUnitStatisticResponse().items(
         shopUnitService.nodeIdStatisticGet(id, dateStart, dateEnd).stream()
             .map(shopUnitMapper::toShopUnitStatisticUnitDto)
@@ -155,7 +159,7 @@ public class ShopUnitController {
           "Дата должна обрабатываться согласно ISO 8601 (такой придерживается OpenAPI). " +
           "Если дата не удовлетворяет данному формату, необходимо отвечать 400", required = true) @Valid
       @RequestParam(value = "date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-          OffsetDateTime date // todo - date is not iso
+          OffsetDateTime date // todo - what if date is not iso
   ) {
     return new ShopUnitStatisticResponse().items(
         shopUnitService.salesGet(date.minus(24, ChronoUnit.HOURS), date).stream()
