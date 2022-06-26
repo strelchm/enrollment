@@ -76,7 +76,9 @@ public class ShopUnitService {
         if (current.getType() == ShopUnitType.CATEGORY) {
           unit.setPrice(current.getPrice());
         }
-        shopUnitStatistics.add(shopUnitMapper.toShopUnitStatistics(current));
+        if (!statEquality(current, unit)) {
+          shopUnitStatistics.add(shopUnitMapper.toShopUnitStatistics(current));
+        }
       }
 
 
@@ -113,6 +115,13 @@ public class ShopUnitService {
 
     shopUnitStatisticsRepository.saveAll(shopUnitStatistics);
     recalculationCategories.forEach(unit -> recalculateParent(updateDate, unit));
+  }
+
+  private boolean statEquality(ShopUnit unit, ShopUnit parent) {
+    UUID unitId = Optional.ofNullable(unit).map(ShopUnit::getId).orElse(null);
+    UUID parentId = Optional.ofNullable(parent).map(ShopUnit::getId).orElse(null);
+    return unit.getName().equals(parent.getName()) && Objects.equals(unitId, parentId) &&
+        (unit.getType() == ShopUnitType.CATEGORY || unit.getPrice().equals(parent.getPrice()));
   }
 
   private boolean updateExistedChild(ShopUnit unit, ShopUnit parent) {
