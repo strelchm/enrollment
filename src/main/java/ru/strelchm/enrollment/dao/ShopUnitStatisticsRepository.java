@@ -11,5 +11,4 @@ import java.util.UUID;
 
 @Repository
 public interface ShopUnitStatisticsRepository extends JpaRepository<ShopUnitStatistics, UUID>, JpaSpecificationExecutor<ShopUnitStatistics> {
-  List<ShopUnitStatistics> findAllByUnit(ShopUnit unit); // todo sorting?
 }

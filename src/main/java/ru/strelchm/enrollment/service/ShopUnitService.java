@@ -12,7 +12,6 @@ import ru.strelchm.enrollment.exception.BadRequestException;
 import ru.strelchm.enrollment.exception.NotFoundException;
 import ru.strelchm.enrollment.mapper.ShopUnitMapper;
 
-import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Predicate;
 import java.time.OffsetDateTime;
 import java.util.*;

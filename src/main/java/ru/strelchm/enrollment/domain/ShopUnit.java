@@ -12,9 +12,9 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-//@Table(indexes = {
-//    @Index(columnList = "city, street, number, region_id", name = "address_city_street_number_region_id_idx"),
-//})
+@Table(indexes = {
+    @Index(columnList = "type, updated", name = "address_type_updated_idx"),
+})
 public class ShopUnit extends BaseEntity<UUID> {
   @Id
   private UUID id;
