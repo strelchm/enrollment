@@ -1,4 +1,4 @@
-package ru.strelchm.enrollment.api.impl;
+package ru.strelchm.enrollment.api;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
