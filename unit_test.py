@@ -8,9 +8,11 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-API_BASEURL = "http://localhost:8089"
+API_BASEURL = "http://localhost:80"
 
 ROOT_ID = "069cb8d7-bbdd-47d3-ad8f-82ef4c269df1"
+TELEPHONES_ID = "d515e43f-f3f6-4471-bb77-6b455017a2d2"
+TVSETS_ID = "1cc0129a-2bfe-474c-9ee6-d435bf5fc8f2"
 
 IMPORT_BATCHES = [
     {
@@ -247,25 +249,62 @@ def test_sales():
 
 
 def test_stats():
+    # empty result
     params = urllib.parse.urlencode({
-        "dateStart": "2022-02-01T00:00:00.000Z",
+        "dateStart": "2022-02-03T00:00:00.000Z",
         "dateEnd": "2022-02-03T00:00:00.000Z"
     })
     status, response = request(
         f"/node/{ROOT_ID}/statistic?{params}", json_response=True)
 
-    assert status == 200, f"Expected HTTP status code 200, got {status}"
+    assert status == 200 and len(response["items"]) == 0, f"Expected HTTP status code 200, got {status}"
+
+    # normal parameters
+    params = urllib.parse.urlencode({
+        "dateStart": "2022-02-01T00:00:00.000Z",
+        "dateEnd": "2022-02-03T15:01:00.000Z"
+    })
+    status, response = request(
+        f"/node/{ROOT_ID}/statistic?{params}", json_response=True)
+
+    # 400 code
+    params = urllib.parse.urlencode({
+        "dateStart": "2022-02-03T15:01:00.000Z",
+        "dateEnd": "2022-02-01T00:00:00.000Z"
+    })
+    status, response = request(
+        f"/node/{ROOT_ID}/statistic?{params}", json_response=True)
+
+    assert status == 400, f"Expected HTTP status code 200, got {status}"
+
+    # empty result
+    params = urllib.parse.urlencode({
+        "dateStart": "2022-02-01T00:00:00.000Z",
+        "dateEnd": "2022-02-03T15:00:00.000Z"
+    })
+    status, response = request(
+        f"/node/{ROOT_ID}/statistic?{params}", json_response=True)
+
+    assert status == 200 and len(response["items"]) == 0, f"Expected HTTP status code 200, got {status}"
     print("Test stats passed.")
 
 
 def test_delete():
-    status, _ = request(f"/delete/{ROOT_ID}", method="DELETE")
-    assert status == 200, f"Expected HTTP status code 200, got {status}"
-
-    status, _ = request(f"/nodes/{ROOT_ID}", json_response=True)
-    assert status == 404, f"Expected HTTP status code 404, got {status}"
+    test_category_delete(TVSETS_ID)
+    test_category_delete(TELEPHONES_ID)
+    test_category_delete(ROOT_ID)
 
     print("Test delete passed.")
+
+
+def test_category_delete(id):
+    status, _ = request(f"/delete/{id}", method="DELETE")
+    assert status == 200, f"Expected HTTP status code 200, got {status}"
+
+    status, _ = request(f"/nodes/{id}", json_response=True)
+    assert status == 404, f"Expected HTTP status code 404, got {status}"
+
+    print("Test delete category (id = " + id + ") done")
 
 
 def test_all():
